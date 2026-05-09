@@ -16,11 +16,13 @@ A REST API for managing OKR (Objectives and Key Results) with full CRUD operatio
 ## Setup
 
 ### 1. Configure Database
-Edit `src/main/resources/application.properties`:
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/okr_db?useSSL=false&serverTimezone=UTC
-spring.datasource.username=root
-spring.datasource.password=root
+Edit `src/main/resources/application.yaml`:
+```yaml
+  datasource:
+    url: jdbc:mysql://localhost:3306/okr_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
 ```
 
 ### 2. Build & Run
