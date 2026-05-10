@@ -2,6 +2,7 @@ package com.okr.service;
 
 import com.okr.dto.OkrObjectiveDTO;
 import com.okr.entity.OkrObjective;
+import com.okr.entity.OkrObjective.ObjectiveStatus;
 import com.okr.exception.ResourceNotFoundException;
 import com.okr.repository.OkrObjectiveRepository;
 import lombok.RequiredArgsConstructor;
@@ -133,7 +134,7 @@ public class OkrObjectiveService {
 
     // ─── HELPERS ───────────────────────────────────────────────────────────────
 
-    private OkrObjective findOrThrow(Integer id) {
+    public OkrObjective findOrThrow(Integer id) {
         return repository.findById(id)
                 .filter(o -> o.getDeletedAt() == null)
                 .orElseThrow(() -> new ResourceNotFoundException("OkrObjective", id));
@@ -213,4 +214,38 @@ public class OkrObjectiveService {
                 .meta(o.getMeta())
                 .build();
     }
+
+    /**
+     * Called by OkrKeyResultService after any KR progress update.
+     * Recalculates objective progress as a weighted average of all active KRs.
+     */
+    @Transactional
+    public void recalculateProgress(Integer objectiveId) {
+        OkrObjective objective = findOrThrow(objectiveId);
+        List<com.okr.entity.OkrKeyResult> krs = objective.getKeyResults()
+                .stream().filter(kr -> kr.getIsActive() && kr.getDeletedAt() == null).toList();
+
+        if (krs.isEmpty()) {
+            return;
+        }
+
+        int totalWeight = krs.stream().mapToInt(com.okr.entity.OkrKeyResult::getWeightPct).sum();
+        if (totalWeight == 0) return;
+
+        double weightedSum = krs.stream()
+                .mapToDouble(kr -> (double) kr.getProgressPct() * kr.getWeightPct())
+                .sum();
+
+        int newProgress = (int) Math.round(weightedSum / totalWeight);
+        objective.setProgressPct(newProgress);
+
+        // Auto-update status if all KRs are at 100%
+        boolean allComplete = krs.stream().allMatch(kr -> kr.getProgressPct() >= 100);
+        if (allComplete && objective.getStatus() == ObjectiveStatus.active) {
+            objective.setStatus(ObjectiveStatus.completed);
+        }
+
+        repository.save(objective);
+    }
+
 }

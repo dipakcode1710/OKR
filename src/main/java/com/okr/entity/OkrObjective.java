@@ -7,14 +7,12 @@ import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "okr_objectives")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class OkrObjective {
 
     @Id
@@ -106,6 +104,11 @@ public class OkrObjective {
 
     @Column(name = "updated_by")
     private Integer updatedBy;
+
+    // Convenience: load key results when needed
+    @OneToMany(mappedBy = "objective", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<OkrKeyResult> keyResults = new ArrayList<>();
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "meta", columnDefinition = "json")
