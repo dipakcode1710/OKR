@@ -12,15 +12,13 @@ import java.util.List;
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface OkrObjectiveMapper {
 
-    @Mapping(target = "cycle", ignore = true)
+    @BeanMapping(builder = @Builder(disableBuilder = true))
+    @Mapping(target = "cycleId", ignore = true)
     @Mapping(target = "parentObjective", ignore = true)
     @Mapping(target = "keyResults", ignore = true)
     OkrObjective toEntity(ObjectiveRequest request);
 
-    @Mapping(source = "cycle.id",   target = "cycleId")
-    @Mapping(source = "cycle.cycleName", target = "cycleName")
-    @Mapping(source = "parentObjective.id", target = "parentObjectiveId")
-    @Mapping(target = "keyResults", ignore = true)   // loaded on demand in service
+    @Mapping(source = "cycleId",   target = "cycleId")
     ObjectiveResponse toResponse(OkrObjective objective);
 
     List<ObjectiveResponse> toResponseList(List<OkrObjective> objectives);
@@ -32,7 +30,7 @@ public interface OkrObjectiveMapper {
     KeyResultResponse toKeyResultResponse(OkrKeyResult kr);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mapping(target = "cycle", ignore = true)
+    @Mapping(target = "cycleId", ignore = true)
     @Mapping(target = "parentObjective", ignore = true)
     @Mapping(target = "keyResults", ignore = true)
     void updateEntity(@MappingTarget OkrObjective objective, ObjectiveRequest request);

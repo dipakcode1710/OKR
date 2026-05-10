@@ -1,7 +1,7 @@
 package com.okr.controller;
 
-import com.okr.dto.ApiResponse;
 import com.okr.dto.TeamDTO;
+import com.okr.dto.response.ApiResponse;
 import com.okr.service.TeamService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,7 +1,7 @@
 package com.okr.controller;
 
-import com.okr.dto.ApiResponse;
 import com.okr.dto.OkrObjectiveDTO;
+import com.okr.dto.response.ApiResponse;
 import com.okr.entity.OkrObjective;
 import com.okr.service.OkrObjectiveService;
 import jakarta.validation.Valid;

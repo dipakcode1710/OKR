@@ -1,4 +1,4 @@
-package com.okr.dto;
+package com.okr.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
