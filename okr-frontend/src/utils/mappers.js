@@ -51,7 +51,9 @@ export const mapObjective = (o = {}) => {
 
 export const toObjectivePayload = (form) => ({
   cycleId: form.cycleId,
-  ownerEmployeeId: form.ownerEmployeeId ?? null,
+  //For testing hardcode values once login page develop reslove employee id 
+  ownerEmployeeId: form.ownerEmployeeId ?? 24,
+  //ownerEmployeeId: form.ownerEmployeeId ?? null,
   ownerTeamId: form.ownerTeamId ?? null,
   parentObjectiveId: form.parentObjectiveId ?? null,
   alignedObjectiveId: form.alignedObjectiveId ?? null,
@@ -64,7 +66,7 @@ export const toObjectivePayload = (form) => ({
   status: (form.status || "active").toLowerCase(),
   progressPct: form.progress ?? 0,
   confidenceScore: form.confidence ?? 5,
-  scoringMethod: form.scoringMethod ?? "weighted_average",
+  scoringMethod: form.scoringMethod ?? "weighted_kr_average",
   checkInFrequency: form.checkInFrequency ?? "weekly",
   startDate: form.startDate ?? null,
   dueDate: form.dueDate ?? form.due ?? null,
