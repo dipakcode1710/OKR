@@ -9,6 +9,7 @@ import {
   InitiativesScreen,
   CheckInsScreen,
   CyclesScreen,
+  LoginScreen,
 } from "./screens";
 import {
   NewObjectiveModal,
@@ -19,7 +20,16 @@ import {
   CycleModal,
 } from "./components/modals";
 
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem("okr_user"));
+  } catch {
+    return null;
+  }
+}
+
 export default function App() {
+  const [user, setUser] = useState(getStoredUser);
   const [screen, setScreen] = useState("dashboard");
   const [detailId, setDetailId] = useState(null);
   const [modals, setModals] = useState({
@@ -45,6 +55,22 @@ export default function App() {
     open("progress");
   };
 
+  function handleLogin(userData) {
+    setUser(userData);
+    setScreen("dashboard");
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("okr_auth_token");
+    localStorage.removeItem("okr_user");
+    setUser(null);
+    setScreen("dashboard");
+  }
+
+  if (!user) {
+    return <LoginScreen onLogin={handleLogin} />;
+  }
+
   return (
     <div
       style={{
@@ -54,7 +80,7 @@ export default function App() {
         fontFamily: "'DM Sans', system-ui, sans-serif",
       }}
     >
-      <Sidebar active={screen} onNav={nav} />
+      <Sidebar active={screen} onNav={nav} user={user} onLogout={handleLogout} />
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         {screen === "dashboard" && (

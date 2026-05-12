@@ -1,7 +1,12 @@
 import { T } from "../../utils/theme";
 import Avatar from "../common/Avatar";
 
+function getUser() {
+  try { return JSON.parse(localStorage.getItem("okr_user")); } catch { return null; }
+}
+
 export default function Topbar({ title, children }) {
+  const user = getUser();
   return (
     <div
       style={{
@@ -48,7 +53,7 @@ export default function Topbar({ title, children }) {
           }}
         >
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>Atul Jadhav</div>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>{user?.name ?? "—"}</div>
             <div
               style={{
                 fontSize: 10,
@@ -57,10 +62,13 @@ export default function Topbar({ title, children }) {
                 letterSpacing: 0.5,
               }}
             >
-              Lead Developer
+              {user?.role ?? ""}
             </div>
           </div>
-          <Avatar initials="AJ" size={36} />
+          <Avatar
+            initials={(user?.name ?? "?").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+            size={36}
+          />
         </div>
       </div>
     </div>

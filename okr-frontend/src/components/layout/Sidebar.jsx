@@ -33,7 +33,7 @@ const NAV = [
   },
 ];
 
-export default function Sidebar({ active, onNav }) {
+export default function Sidebar({ active, onNav, user, onLogout }) {
   return (
     <aside
       style={{
@@ -123,16 +123,25 @@ export default function Sidebar({ active, onNav }) {
         })}
       </nav>
 
-      {/* Logout */}
-      <div style={{ padding: "16px" }}>
+      {/* User + Logout */}
+      <div style={{ padding: "12px 16px 16px", borderTop: "1px solid rgba(255,255,255,.07)" }}>
+        {user && (
+          <div style={{ marginBottom: 10, padding: "8px 12px" }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>{user.name}</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", marginTop: 2, textTransform: "uppercase", letterSpacing: 0.4 }}>
+              {user.role}
+            </div>
+          </div>
+        )}
         <button
+          onClick={onLogout}
           style={{
             width: "100%",
             padding: "11px",
             borderRadius: 8,
-            background: T.red,
-            color: "#fff",
-            border: "none",
+            background: "rgba(224,49,49,.15)",
+            color: "#ff8787",
+            border: "1px solid rgba(224,49,49,.25)",
             fontSize: 13,
             fontWeight: 700,
             cursor: "pointer",
