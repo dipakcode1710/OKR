@@ -33,6 +33,14 @@ export default function CheckInModal({ open, onClose, defaultObjectiveId, defaul
     : keyResults;
 
   const handleSubmit = async () => {
+    if (!form.objId) return setErr("Please select an objective.");
+    if (!form.summary.trim()) return setErr("Summary is required.");
+    if (!form.details.trim()) return setErr("Details are required.");
+    if (!form.wins.trim()) return setErr("Wins are required.");
+    if (!form.blockers.trim()) return setErr("Blockers are required.");
+    if (form.progress === "" || form.progress === null) return setErr("Progress % is required.");
+    if (!form.nextSteps.trim()) return setErr("Next Steps are required.");
+
     setSaving(true);
     setErr(null);
     try {

@@ -130,7 +130,7 @@ export const toInitiativePayload = (form) => ({
   keyResultId: form.krId ?? form.keyResultId,
   initiativeTitle: form.title,
   initiativeDescription: form.desc ?? "",
-  ownerEmployeeId: form.ownerEmployeeId ?? null,
+  ownerEmployeeId: form.ownerEmployeeId ?? 24,
   initiativeStatus: (form.status || "planned").toLowerCase(),
   impactEstimate: form.impactEstimate ?? "medium",
   effortEstimate: form.effortEstimate ?? "medium",
@@ -165,7 +165,7 @@ export const mapCheckIn = (c = {}) => ({
 export const toCheckInPayload = (form) => ({
   objectiveId: form.objId ?? form.objectiveId,
   keyResultId: form.krId ?? form.keyResultId ?? null,
-  employeeId: form.employeeId ?? null,
+  employeeId: form.employeeId ?? 24,
   checkInDate: form.date ?? new Date().toISOString().slice(0, 10),
   weekNumber: form.week ?? weekNumber(new Date()),
   updateType: form.type ?? "progress_update",
