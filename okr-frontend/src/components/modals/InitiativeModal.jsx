@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal, FormGroup, Input, Textarea, Select, Btn } from "../common";
 import { s } from "../../utils/theme";
 import { useOkr } from "../../context/OkrContext";
@@ -12,11 +12,28 @@ const INIT = {
   dueDate: "",
 };
 
-export default function InitiativeModal({ open, onClose, defaultKrId }) {
-  const { keyResults, createInitiative } = useOkr();
+export default function InitiativeModal({ open, onClose, defaultKrId, initiative }) {
+  const { keyResults, createInitiative, updateInitiative } = useOkr();
   const [form, setForm] = useState({ ...INIT, krId: defaultKrId ?? "" });
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState(null);
+
+  useEffect(() => {
+    if (!open) return;
+    if (initiative) {
+      setForm({
+        krId: initiative.krId ? String(initiative.krId) : "",
+        title: initiative.title || "",
+        desc: initiative.raw?.initiativeDescription || "",
+        priority: initiative.priority || "high",
+        startDate: (initiative.raw?.startDate ?? "").slice(0, 10),
+        dueDate: (initiative.raw?.dueDate ?? "").slice(0, 10),
+      });
+    } else {
+      setForm({ ...INIT, krId: defaultKrId ?? "" });
+    }
+    setErr(null);
+  }, [open]);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -24,21 +41,27 @@ export default function InitiativeModal({ open, onClose, defaultKrId }) {
     setSaving(true);
     setErr(null);
     try {
-      await createInitiative({
+      const payload = {
         ...form,
         krId: form.krId ? Number(form.krId) : keyResults[0]?.id,
-      });
-      setForm({ ...INIT, krId: defaultKrId ?? "" });
+      };
+      if (initiative) {
+        await updateInitiative(initiative.id, payload);
+      } else {
+        await createInitiative(payload);
+      }
       onClose();
     } catch (e) {
-      setErr(e?.message || "Failed to add initiative");
+      setErr(e?.message || (initiative ? "Failed to update initiative" : "Failed to add initiative"));
     } finally {
       setSaving(false);
     }
   };
 
+  const isEdit = Boolean(initiative);
+
   return (
-    <Modal open={open} onClose={onClose} title="New Initiative">
+    <Modal open={open} onClose={onClose} title={isEdit ? "Edit Initiative" : "New Initiative"}>
       <FormGroup label="Initiative Title">
         <Input
           placeholder="What action will be taken?"
@@ -100,7 +123,7 @@ export default function InitiativeModal({ open, onClose, defaultKrId }) {
           Cancel
         </Btn>
         <Btn variant="primary" onClick={handleSubmit} disabled={saving}>
-          {saving ? "Adding…" : "Add Initiative"}
+          {saving ? (isEdit ? "Saving…" : "Adding…") : (isEdit ? "Save Changes" : "Add Initiative")}
         </Btn>
       </div>
     </Modal>

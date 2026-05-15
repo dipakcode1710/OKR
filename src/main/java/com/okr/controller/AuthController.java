@@ -49,6 +49,7 @@ public class AuthController {
                         .email(employee.getEmail())
                         .role(employee.getRole().name())
                         .name(employee.getFirstName() + " " + employee.getLastName())
+                        .employeeId(employee.getId())
                         .build();
 
         return ResponseEntity.ok(response);

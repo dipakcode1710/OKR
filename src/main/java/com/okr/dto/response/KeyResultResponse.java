@@ -22,6 +22,7 @@ public class KeyResultResponse {
     private Integer progressPct;
     private Integer weightPct;
     private ReviewStatus reviewStatus;
+    private Integer createdBy;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

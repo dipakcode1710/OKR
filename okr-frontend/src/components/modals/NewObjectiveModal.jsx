@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal, FormGroup, Input, Textarea, Select, Btn } from "../common";
 import { s } from "../../utils/theme";
 import { useOkr } from "../../context/OkrContext";
@@ -13,11 +13,29 @@ const INIT = {
   successCriteria: "",
 };
 
-export default function NewObjectiveModal({ open, onClose }) {
-  const { cycles, createObjective } = useOkr();
+export default function NewObjectiveModal({ open, onClose, objective }) {
+  const { cycles, createObjective, updateObjective } = useOkr();
   const [form, setForm] = useState(INIT);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState(null);
+
+  useEffect(() => {
+    if (!open) return;
+    if (objective) {
+      setForm({
+        title: objective.title || "",
+        desc: objective.desc || "",
+        cycleId: objective.cycleId ? String(objective.cycleId) : "",
+        scope: objective.scope || "personal",
+        type: objective.type || "committed",
+        dueDate: (objective.raw?.dueDate ?? "").slice(0, 10) || "2026-06-30",
+        successCriteria: objective.raw?.successCriteria || "",
+      });
+    } else {
+      setForm(INIT);
+    }
+    setErr(null);
+  }, [open]);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -25,21 +43,27 @@ export default function NewObjectiveModal({ open, onClose }) {
     setSaving(true);
     setErr(null);
     try {
-      await createObjective({
+      const payload = {
         ...form,
         cycleId: form.cycleId ? Number(form.cycleId) : cycles[0]?.id,
-      });
-      setForm(INIT);
+      };
+      if (objective) {
+        await updateObjective(objective.id, payload);
+      } else {
+        await createObjective(payload);
+      }
       onClose();
     } catch (e) {
-      setErr(e?.message || "Failed to create objective");
+      setErr(e?.message || (objective ? "Failed to update objective" : "Failed to create objective"));
     } finally {
       setSaving(false);
     }
   };
 
+  const isEdit = Boolean(objective);
+
   return (
-    <Modal open={open} onClose={onClose} title="New Objective" width={560}>
+    <Modal open={open} onClose={onClose} title={isEdit ? "Edit Objective" : "New Objective"} width={560}>
       <FormGroup label="Objective Title">
         <Input
           placeholder="What do you want to achieve?"
@@ -112,7 +136,7 @@ export default function NewObjectiveModal({ open, onClose }) {
           Cancel
         </Btn>
         <Btn variant="primary" onClick={handleSubmit} disabled={saving}>
-          {saving ? "Creating…" : "Create Objective"}
+          {saving ? (isEdit ? "Saving…" : "Creating…") : (isEdit ? "Save Changes" : "Create Objective")}
         </Btn>
       </div>
     </Modal>

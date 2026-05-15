@@ -15,4 +15,6 @@ public class LoginResponse {
     private String role;
 
     private String name;
+
+    private Integer employeeId;
 }

@@ -41,9 +41,25 @@ export default function App() {
     cycle: false,
   });
   const [activeKr, setActiveKr] = useState(null);
+  const [editObj, setEditObj] = useState(null);
+  const [editInit, setEditInit] = useState(null);
+  const [editKr, setEditKr] = useState(null);
+  const [editCycle, setEditCycle] = useState(null);
 
   const open = (key) => setModals((m) => ({ ...m, [key]: true }));
   const close = (key) => setModals((m) => ({ ...m, [key]: false }));
+
+  const openEditObj = (obj) => { setEditObj(obj); open("obj"); };
+  const closeObj = () => { close("obj"); setEditObj(null); };
+
+  const openEditInit = (ini) => { setEditInit(ini); open("initiative"); };
+  const closeInit = () => { close("initiative"); setEditInit(null); };
+
+  const openEditKr = (kr) => { setEditKr(kr); open("kr"); };
+  const closeKr = () => { close("kr"); setEditKr(null); };
+
+  const openEditCycle = (c) => { setEditCycle(c); open("cycle"); };
+  const closeCycle = () => { close("cycle"); setEditCycle(null); };
 
   const nav = (next, id = null) => {
     setScreen(next);
@@ -84,34 +100,38 @@ export default function App() {
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         {screen === "dashboard" && (
-          <Dashboard onNav={nav} onNewObj={() => open("obj")} />
+          <Dashboard onNav={nav} onNewObj={() => { setEditObj(null); open("obj"); }} />
         )}
         {screen === "objectives" && (
-          <Objectives onNav={nav} onNew={() => open("obj")} />
+          <Objectives onNav={nav} onNew={() => { setEditObj(null); open("obj"); }} onEdit={openEditObj} />
         )}
         {screen === "detail" && (
           <ObjectiveDetail
             objId={detailId}
             onBack={() => nav("objectives")}
-            onNewKr={() => open("kr")}
+            onNewKr={() => { setEditKr(null); open("kr"); }}
             onNewCheckin={() => open("checkin")}
-            onNewInitiative={() => open("initiative")}
+            onNewInitiative={() => { setEditInit(null); open("initiative"); }}
             onUpdateProgress={openProgress}
+            onEditObj={openEditObj}
+            onEditInitiative={openEditInit}
+            onEditKr={openEditKr}
           />
         )}
-        {screen === "keyresults" && <KeyResults onUpdateProgress={openProgress} />}
+        {screen === "keyresults" && <KeyResults onUpdateProgress={openProgress} onEdit={openEditKr} />}
         {screen === "initiatives" && (
-          <InitiativesScreen onNew={() => open("initiative")} />
+          <InitiativesScreen onNew={() => { setEditInit(null); open("initiative"); }} onEdit={openEditInit} />
         )}
         {screen === "checkins" && <CheckInsScreen onNew={() => open("checkin")} />}
-        {screen === "cycles" && <CyclesScreen onNew={() => open("cycle")} />}
+        {screen === "cycles" && <CyclesScreen onNew={() => { setEditCycle(null); open("cycle"); }} onEdit={openEditCycle} />}
       </div>
 
-      <NewObjectiveModal open={modals.obj} onClose={() => close("obj")} />
+      <NewObjectiveModal open={modals.obj} onClose={closeObj} objective={editObj} />
       <NewKrModal
         open={modals.kr}
-        onClose={() => close("kr")}
-        defaultObjectiveId={screen === "detail" ? detailId : null}
+        onClose={closeKr}
+        defaultObjectiveId={screen === "detail" && !editKr ? detailId : null}
+        keyResult={editKr}
       />
       <ProgressModal
         open={modals.progress}
@@ -125,9 +145,10 @@ export default function App() {
       />
       <InitiativeModal
         open={modals.initiative}
-        onClose={() => close("initiative")}
+        onClose={closeInit}
+        initiative={editInit}
       />
-      <CycleModal open={modals.cycle} onClose={() => close("cycle")} />
+      <CycleModal open={modals.cycle} onClose={closeCycle} cycle={editCycle} />
     </div>
   );
 }

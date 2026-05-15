@@ -11,8 +11,26 @@ export default function ObjectiveDetail({
   onNewCheckin,
   onNewInitiative,
   onUpdateProgress,
+  onEditObj,
+  onEditInitiative,
+  onEditKr,
 }) {
-  const { objectives, keyResults, initiatives, checkIns } = useOkr();
+  const { objectives, keyResults, initiatives, checkIns, deleteKeyResult, deleteInitiative, deleteCheckIn } = useOkr();
+
+  const handleDeleteKr = async (kr) => {
+    if (!window.confirm(`Delete key result "${kr.title}"? This can be restored from the database.`)) return;
+    try { await deleteKeyResult(kr.id); } catch (e) { console.error(e); }
+  };
+
+  const handleDeleteInit = async (ini) => {
+    if (!window.confirm(`Delete initiative "${ini.title}"? This can be restored from the database.`)) return;
+    try { await deleteInitiative(ini.id); } catch (e) { console.error(e); }
+  };
+
+  const handleDeleteCheckIn = async (c) => {
+    if (!window.confirm(`Delete check-in "${c.summary}"? This can be restored from the database.`)) return;
+    try { await deleteCheckIn(c.id); } catch (e) { console.error(e); }
+  };
   const [tab, setTab] = useState("kr");
 
   const obj = objectives.find((o) => o.id === objId);
@@ -33,6 +51,9 @@ export default function ObjectiveDetail({
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
       <Topbar title="Objective Detail">
+        {onEditObj && (
+          <Btn onClick={() => onEditObj(obj)}>Edit Objective</Btn>
+        )}
         <Btn onClick={onNewCheckin}>+ Check-in</Btn>
         <Btn variant="primary" onClick={onNewKr}>
           + Key Result
@@ -175,7 +196,7 @@ export default function ObjectiveDetail({
                       {kr.title}
                     </div>
                     <div style={{ fontSize: 11, color: T.textMuted }}>
-                      {kr.metric} · Weight: {kr.weight}%
+                      {kr.metric} · Weight: {kr.weight}% · {kr.owner}
                     </div>
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0 }}>
@@ -203,6 +224,17 @@ export default function ObjectiveDetail({
                   </span>
                   <Btn onClick={() => onUpdateProgress(kr)} style={{ padding: "4px 12px", fontSize: 11 }}>
                     Update
+                  </Btn>
+                  {onEditKr && (
+                    <Btn onClick={() => onEditKr(kr)} style={{ padding: "4px 12px", fontSize: 11 }}>
+                      Edit
+                    </Btn>
+                  )}
+                  <Btn
+                    onClick={() => handleDeleteKr(kr)}
+                    style={{ padding: "4px 12px", fontSize: 11, color: T.danger, borderColor: T.danger }}
+                  >
+                    Delete
                   </Btn>
                 </div>
                 <div style={{ fontSize: 11, color: T.textLight }}>
@@ -316,9 +348,43 @@ export default function ObjectiveDetail({
                       </div>
                     )}
                   </div>
-                  <Badge type={ini.status}>
-                    {ini.status.charAt(0).toUpperCase() + ini.status.slice(1)}
-                  </Badge>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                    <Badge type={ini.status}>
+                      {ini.status.charAt(0).toUpperCase() + ini.status.slice(1)}
+                    </Badge>
+                    {onEditInitiative && (
+                      <button
+                        onClick={() => onEditInitiative(ini)}
+                        style={{
+                          fontSize: 11,
+                          color: T.navy,
+                          background: "none",
+                          border: `1px solid ${T.border}`,
+                          borderRadius: 5,
+                          padding: "3px 10px",
+                          cursor: "pointer",
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        Edit
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteInit(ini)}
+                      style={{
+                        fontSize: 11,
+                        color: T.danger,
+                        background: "none",
+                        border: `1px solid ${T.danger}`,
+                        borderRadius: 5,
+                        padding: "3px 10px",
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -350,6 +416,22 @@ export default function ObjectiveDetail({
                     <span style={{ fontSize: 11, color: T.textLight }}>
                       {c.date} · Wk {c.week}
                     </span>
+                    <button
+                      onClick={() => handleDeleteCheckIn(c)}
+                      style={{
+                        fontSize: 11,
+                        color: T.danger,
+                        background: "none",
+                        border: `1px solid ${T.danger}`,
+                        borderRadius: 5,
+                        padding: "3px 10px",
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                        flexShrink: 0,
+                      }}
+                    >
+                      Delete
+                    </button>
                   </div>
                   <div
                     style={{

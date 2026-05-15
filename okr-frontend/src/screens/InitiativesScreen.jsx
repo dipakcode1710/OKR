@@ -3,8 +3,17 @@ import { useOkr } from "../context/OkrContext";
 import Topbar from "../components/layout/Topbar";
 import { Btn, Badge } from "../components/common";
 
-export default function InitiativesScreen({ onNew }) {
-  const { initiatives, keyResults } = useOkr();
+export default function InitiativesScreen({ onNew, onEdit }) {
+  const { initiatives, keyResults, deleteInitiative } = useOkr();
+
+  const handleDelete = async (ini) => {
+    if (!window.confirm(`Delete initiative "${ini.title}"? This can be restored from the database.`)) return;
+    try {
+      await deleteInitiative(ini.id);
+    } catch (err) {
+      console.error("Delete initiative failed", err);
+    }
+  };
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
@@ -106,7 +115,41 @@ export default function InitiativesScreen({ onNew }) {
                     </div>
                   )}
                 </div>
-                <Badge type={ini.status}>{ini.status}</Badge>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                  <Badge type={ini.status}>{ini.status}</Badge>
+                  {onEdit && (
+                    <button
+                      onClick={() => onEdit(ini)}
+                      style={{
+                        fontSize: 11,
+                        color: T.navy,
+                        background: "none",
+                        border: `1px solid ${T.border}`,
+                        borderRadius: 5,
+                        padding: "3px 10px",
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      Edit
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDelete(ini)}
+                    style={{
+                      fontSize: 11,
+                      color: T.danger,
+                      background: "none",
+                      border: `1px solid ${T.danger}`,
+                      borderRadius: 5,
+                      padding: "3px 10px",
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             );
           })}

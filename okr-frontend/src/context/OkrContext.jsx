@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -13,6 +14,7 @@ import {
   initiativeService,
   checkInService,
   teamService,
+  employeeService,
 } from "../services";
 import {
   mapCycle,
@@ -28,6 +30,7 @@ import {
   toCheckInPayload,
   toProgressPayload,
   toTeamPayload,
+  initials,
 } from "../utils/mappers";
 import {
   CYCLES as SEED_CYCLES,
@@ -38,6 +41,7 @@ import {
 } from "../data/seedData";
 
 const OkrContext = createContext(null);
+
 
 export function OkrProvider({ children }) {
   const [cycles, setCycles] = useState([]);
@@ -51,19 +55,38 @@ export function OkrProvider({ children }) {
   const [error, setError] = useState(null);
   const [usingFallback, setUsingFallback] = useState(false);
 
+  // Ref-based employee name map so mutations (create/update) can resolve names
+  // without needing employees in their dependency arrays.
+  const employeeMapRef = useRef({});
+
+  // Resolves any entity's owner name from the employee map using the given ID.
+  const resolveOwner = (mapped, employeeId) => {
+    const name = employeeMapRef.current[employeeId];
+    if (!name) return mapped;
+    return { ...mapped, owner: name, ownerInitials: initials(name) };
+  };
+
   // ─── Initial load ─────────────────────────────────────────────
   const loadAll = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [cyclesData, objectivesData, teamsData] = await Promise.all([
+      const [cyclesData, objectivesData, teamsData, employeesData] = await Promise.all([
         cycleService.getAll(),
         objectiveService.getAll(),
         teamService.getAll(),
+        employeeService.getAll().catch(() => []),
       ]);
 
+      // Build employee ID → name lookup used by withOwner()
+      employeeMapRef.current = Object.fromEntries(
+        (employeesData || []).map((e) => [e.id, e.name])
+      );
+
       const mappedCycles = (cyclesData || []).map(mapCycle);
-      const mappedObjectives = (objectivesData || []).map(mapObjective);
+      const mappedObjectives = (objectivesData || []).map((o) =>
+        resolveOwner(mapObjective(o), o.ownerEmployeeId)
+      );
       const mappedTeams = (teamsData || []).map(mapTeam);
 
       setCycles(mappedCycles);
@@ -82,7 +105,9 @@ export function OkrProvider({ children }) {
         )
       );
 
-      const allKrs = krLists.flat().map(mapKeyResult);
+      const allKrs = krLists.flat().map((k) =>
+        resolveOwner(mapKeyResult(k), k.createdBy)
+      );
       const allCheckIns = checkInLists.flat().map(mapCheckIn);
       setKeyResults(allKrs);
       setCheckIns(allCheckIns);
@@ -93,7 +118,9 @@ export function OkrProvider({ children }) {
           initiativeService.getByKeyResult(k.id).catch(() => [])
         )
       );
-      setInitiatives(initLists.flat().map(mapInitiative));
+      setInitiatives(
+        initLists.flat().map((i) => resolveOwner(mapInitiative(i), i.ownerEmployeeId))
+      );
 
       setUsingFallback(false);
     } catch (e) {
@@ -145,21 +172,21 @@ export function OkrProvider({ children }) {
   // ─── Objective mutations ──────────────────────────────────────
   const createObjective = useCallback(async (form) => {
     const created = await objectiveService.create(toObjectivePayload(form));
-    const mapped = mapObjective(created);
+    const mapped = resolveOwner(mapObjective(created), created.ownerEmployeeId);
     setObjectives((prev) => [...prev, mapped]);
     return mapped;
   }, []);
 
   const updateObjective = useCallback(async (id, form) => {
     const updated = await objectiveService.update(id, toObjectivePayload(form));
-    const mapped = mapObjective(updated);
+    const mapped = resolveOwner(mapObjective(updated), updated.ownerEmployeeId);
     setObjectives((prev) => prev.map((o) => (o.id === id ? mapped : o)));
     return mapped;
   }, []);
 
   const updateObjectiveStatus = useCallback(async (id, status) => {
     const updated = await objectiveService.updateStatus(id, status);
-    const mapped = mapObjective(updated);
+    const mapped = resolveOwner(mapObjective(updated), updated.ownerEmployeeId);
     setObjectives((prev) => prev.map((o) => (o.id === id ? mapped : o)));
     return mapped;
   }, []);
@@ -170,7 +197,7 @@ export function OkrProvider({ children }) {
         progressPct,
         confidenceScore,
       });
-      const mapped = mapObjective(updated);
+      const mapped = resolveOwner(mapObjective(updated), updated.ownerEmployeeId);
       setObjectives((prev) => prev.map((o) => (o.id === id ? mapped : o)));
       return mapped;
     },
@@ -185,14 +212,14 @@ export function OkrProvider({ children }) {
   // ─── Key Result mutations ─────────────────────────────────────
   const createKeyResult = useCallback(async (form) => {
     const created = await keyResultService.create(toKeyResultPayload(form));
-    const mapped = mapKeyResult(created);
+    const mapped = resolveOwner(mapKeyResult(created), created.createdBy);
     setKeyResults((prev) => [...prev, mapped]);
     return mapped;
   }, []);
 
   const updateKeyResult = useCallback(async (id, form) => {
     const updated = await keyResultService.update(id, toKeyResultPayload(form));
-    const mapped = mapKeyResult(updated);
+    const mapped = resolveOwner(mapKeyResult(updated), updated.createdBy);
     setKeyResults((prev) => prev.map((k) => (k.id === id ? mapped : k)));
     return mapped;
   }, []);
@@ -208,14 +235,14 @@ export function OkrProvider({ children }) {
         id,
         toProgressPayload(form)
       );
-      const mapped = mapKeyResult(updated);
+      const mapped = resolveOwner(mapKeyResult(updated), updated.createdBy);
       setKeyResults((prev) => prev.map((k) => (k.id === id ? mapped : k)));
 
       // Re-fetch parent objective for rolled-up progress
       if (mapped.objId) {
         try {
           const obj = await objectiveService.getById(mapped.objId);
-          const mappedObj = mapObjective(obj);
+          const mappedObj = resolveOwner(mapObjective(obj), obj.ownerEmployeeId);
           setObjectives((prev) =>
             prev.map((o) => (o.id === mapped.objId ? mappedObj : o))
           );
@@ -236,14 +263,14 @@ export function OkrProvider({ children }) {
   // ─── Initiative mutations ─────────────────────────────────────
   const createInitiative = useCallback(async (form) => {
     const created = await initiativeService.create(toInitiativePayload(form));
-    const mapped = mapInitiative(created);
+    const mapped = resolveOwner(mapInitiative(created), created.ownerEmployeeId);
     setInitiatives((prev) => [...prev, mapped]);
     return mapped;
   }, []);
 
   const updateInitiative = useCallback(async (id, form) => {
     const updated = await initiativeService.update(id, toInitiativePayload(form));
-    const mapped = mapInitiative(updated);
+    const mapped = resolveOwner(mapInitiative(updated), updated.ownerEmployeeId);
     setInitiatives((prev) => prev.map((i) => (i.id === id ? mapped : i)));
     return mapped;
   }, []);

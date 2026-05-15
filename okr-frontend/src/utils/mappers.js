@@ -51,9 +51,7 @@ export const mapObjective = (o = {}) => {
 
 export const toObjectivePayload = (form) => ({
   cycleId: form.cycleId,
-  //For testing hardcode values once login page develop reslove employee id 
-  ownerEmployeeId: form.ownerEmployeeId ?? 24,
-  //ownerEmployeeId: form.ownerEmployeeId ?? null,
+  ownerEmployeeId: form.ownerEmployeeId ?? getAuthEmployeeId(),
   ownerTeamId: form.ownerTeamId ?? null,
   parentObjectiveId: form.parentObjectiveId ?? null,
   alignedObjectiveId: form.alignedObjectiveId ?? null,
@@ -86,6 +84,8 @@ export const mapKeyResult = (k = {}) => ({
   progress: k.progressPct ?? k.progress ?? 0,
   confidence: (k.confidenceLevel ?? k.confidence ?? "medium").toLowerCase(),
   trend: (k.trendDirection ?? k.trend ?? "stable").toLowerCase(),
+  owner: k.ownerName ?? k.owner ?? "Unassigned",
+  ownerInitials: initials(k.ownerName ?? k.owner ?? ""),
   raw: k,
 });
 
@@ -104,6 +104,7 @@ export const toKeyResultPayload = (form) => ({
   weightPct: Number(form.weight) || 0,
   confidenceLevel: form.confidence ?? "medium",
   reviewStatus: form.reviewStatus ?? "in_progress",
+  createdBy: form.createdBy ?? getAuthEmployeeId(),
 });
 
 export const toProgressPayload = (form) => ({
@@ -130,7 +131,7 @@ export const toInitiativePayload = (form) => ({
   keyResultId: form.krId ?? form.keyResultId,
   initiativeTitle: form.title,
   initiativeDescription: form.desc ?? "",
-  ownerEmployeeId: form.ownerEmployeeId ?? 24,
+  ownerEmployeeId: form.ownerEmployeeId ?? getAuthEmployeeId(),
   initiativeStatus: (form.status || "planned").toLowerCase(),
   impactEstimate: form.impactEstimate ?? "medium",
   effortEstimate: form.effortEstimate ?? "medium",
@@ -165,7 +166,7 @@ export const mapCheckIn = (c = {}) => ({
 export const toCheckInPayload = (form) => ({
   objectiveId: form.objId ?? form.objectiveId,
   keyResultId: form.krId ?? form.keyResultId ?? null,
-  employeeId: form.employeeId ?? 24,
+  employeeId: form.employeeId ?? getAuthEmployeeId(),
   checkInDate: form.date ?? new Date().toISOString().slice(0, 10),
   weekNumber: form.week ?? weekNumber(new Date()),
   updateType: form.type ?? "progress_update",
@@ -192,6 +193,16 @@ export const toTeamPayload = (form) => ({
   name: form.name,
   description: form.description ?? "",
 });
+
+// ─── Auth helpers ────────────────────────────────────────────────
+function getAuthEmployeeId() {
+  try {
+    const user = JSON.parse(localStorage.getItem("okr_user") || "{}");
+    return user.employeeId ?? null;
+  } catch {
+    return null;
+  }
+}
 
 // ─── Utilities ──────────────────────────────────────────────────
 export function initials(name = "") {

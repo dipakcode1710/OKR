@@ -3,8 +3,17 @@ import { useOkr } from "../context/OkrContext";
 import Topbar from "../components/layout/Topbar";
 import { Btn, ProgressBar } from "../components/common";
 
-export default function KeyResults({ onUpdateProgress }) {
-  const { objectives, keyResults } = useOkr();
+export default function KeyResults({ onUpdateProgress, onEdit }) {
+  const { objectives, keyResults, deleteKeyResult } = useOkr();
+
+  const handleDelete = async (kr) => {
+    if (!window.confirm(`Delete key result "${kr.title}"? This can be restored from the database.`)) return;
+    try {
+      await deleteKeyResult(kr.id);
+    } catch (err) {
+      console.error("Delete key result failed", err);
+    }
+  };
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
@@ -49,7 +58,7 @@ export default function KeyResults({ onUpdateProgress }) {
                           {kr.title}
                         </div>
                         <div style={{ fontSize: 11, color: T.textMuted }}>
-                          {kr.metric} · Weight {kr.weight}%
+                          {kr.metric} · Weight {kr.weight}% · {kr.owner}
                         </div>
                       </div>
                       <div style={{ textAlign: "right" }}>
@@ -91,6 +100,20 @@ export default function KeyResults({ onUpdateProgress }) {
                         style={{ padding: "4px 12px", fontSize: 11 }}
                       >
                         Update
+                      </Btn>
+                      {onEdit && (
+                        <Btn
+                          onClick={() => onEdit(kr)}
+                          style={{ padding: "4px 12px", fontSize: 11 }}
+                        >
+                          Edit
+                        </Btn>
+                      )}
+                      <Btn
+                        onClick={() => handleDelete(kr)}
+                        style={{ padding: "4px 12px", fontSize: 11, color: T.danger, borderColor: T.danger }}
+                      >
+                        Delete
                       </Btn>
                     </div>
                   </div>

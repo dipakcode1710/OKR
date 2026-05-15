@@ -4,8 +4,18 @@ import { useOkr } from "../context/OkrContext";
 import Topbar from "../components/layout/Topbar";
 import { Btn, Badge, Avatar, ProgressBar } from "../components/common";
 
-export default function Objectives({ onNav, onNew }) {
-  const { objectives, keyResults, initiatives } = useOkr();
+export default function Objectives({ onNav, onNew, onEdit }) {
+  const { objectives, keyResults, initiatives, deleteObjective } = useOkr();
+
+  const handleDelete = async (e, obj) => {
+    e.stopPropagation();
+    if (!window.confirm(`Delete objective "${obj.title}"? This can be restored from the database.`)) return;
+    try {
+      await deleteObjective(obj.id);
+    } catch (err) {
+      console.error("Delete objective failed", err);
+    }
+  };
   const [scope, setScope] = useState("all");
   const filtered =
     scope === "all" ? objectives : objectives.filter((o) => o.scope === scope);
@@ -105,9 +115,43 @@ export default function Objectives({ onNav, onNew }) {
                     <Avatar initials={obj.ownerInitials} size={22} bg={T.navyDark} />
                     <span style={{ fontSize: 12, color: T.textMuted }}>{obj.owner}</span>
                   </div>
-                  <span style={{ fontSize: 11, color: T.textMuted }}>
-                    {krsForObj.length} key results · {initsCount} initiatives
-                  </span>
+                  <div style={{ ...s.flex("center", "flex-end", 10) }}>
+                    <span style={{ fontSize: 11, color: T.textMuted }}>
+                      {krsForObj.length} key results · {initsCount} initiatives
+                    </span>
+                    {onEdit && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onEdit(obj); }}
+                        style={{
+                          fontSize: 11,
+                          color: T.navy,
+                          background: "none",
+                          border: `1px solid ${T.border}`,
+                          borderRadius: 5,
+                          padding: "3px 10px",
+                          cursor: "pointer",
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        Edit
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => handleDelete(e, obj)}
+                      style={{
+                        fontSize: 11,
+                        color: T.danger,
+                        background: "none",
+                        border: `1px solid ${T.danger}`,
+                        borderRadius: 5,
+                        padding: "3px 10px",
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal, FormGroup, Input, Select, Btn } from "../common";
 import { s } from "../../utils/theme";
 import { useOkr } from "../../context/OkrContext";
@@ -14,11 +14,30 @@ const INIT = {
   objId: "",
 };
 
-export default function NewKrModal({ open, onClose, defaultObjectiveId }) {
-  const { objectives, createKeyResult } = useOkr();
+export default function NewKrModal({ open, onClose, defaultObjectiveId, keyResult }) {
+  const { objectives, createKeyResult, updateKeyResult } = useOkr();
   const [form, setForm] = useState({ ...INIT, objId: defaultObjectiveId ?? "" });
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState(null);
+
+  useEffect(() => {
+    if (!open) return;
+    if (keyResult) {
+      setForm({
+        objId: keyResult.objId ? String(keyResult.objId) : "",
+        title: keyResult.title || "",
+        metric: keyResult.metric || "",
+        measurementType: keyResult.raw?.measurementType || "percentage",
+        unit: keyResult.unit || "%",
+        baseline: String(keyResult.baseline ?? ""),
+        target: String(keyResult.target ?? ""),
+        weight: String(keyResult.weight ?? ""),
+      });
+    } else {
+      setForm({ ...INIT, objId: defaultObjectiveId ?? "" });
+    }
+    setErr(null);
+  }, [open]);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -26,21 +45,27 @@ export default function NewKrModal({ open, onClose, defaultObjectiveId }) {
     setSaving(true);
     setErr(null);
     try {
-      await createKeyResult({
+      const payload = {
         ...form,
         objId: form.objId ? Number(form.objId) : objectives[0]?.id,
-      });
-      setForm({ ...INIT, objId: defaultObjectiveId ?? "" });
+      };
+      if (keyResult) {
+        await updateKeyResult(keyResult.id, payload);
+      } else {
+        await createKeyResult(payload);
+      }
       onClose();
     } catch (e) {
-      setErr(e?.message || "Failed to create key result");
+      setErr(e?.message || (keyResult ? "Failed to update key result" : "Failed to create key result"));
     } finally {
       setSaving(false);
     }
   };
 
+  const isEdit = Boolean(keyResult);
+
   return (
-    <Modal open={open} onClose={onClose} title="Add Key Result">
+    <Modal open={open} onClose={onClose} title={isEdit ? "Edit Key Result" : "Add Key Result"}>
       <FormGroup label="Objective">
         <Select value={form.objId} onChange={set("objId")}>
           <option value="">— Select objective —</option>
@@ -127,7 +152,7 @@ export default function NewKrModal({ open, onClose, defaultObjectiveId }) {
           Cancel
         </Btn>
         <Btn variant="primary" onClick={handleSubmit} disabled={saving}>
-          {saving ? "Saving…" : "Add Key Result"}
+          {saving ? (isEdit ? "Saving…" : "Adding…") : (isEdit ? "Save Changes" : "Add Key Result")}
         </Btn>
       </div>
     </Modal>

@@ -4,7 +4,16 @@ import Topbar from "../components/layout/Topbar";
 import { Btn, Badge, HealthDot } from "../components/common";
 
 export default function CheckInsScreen({ onNew }) {
-  const { checkIns, objectives } = useOkr();
+  const { checkIns, objectives, deleteCheckIn } = useOkr();
+
+  const handleDelete = async (c) => {
+    if (!window.confirm(`Delete check-in "${c.summary}"? This can be restored from the database.`)) return;
+    try {
+      await deleteCheckIn(c.id);
+    } catch (err) {
+      console.error("Delete check-in failed", err);
+    }
+  };
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
@@ -61,21 +70,38 @@ export default function CheckInsScreen({ onNew }) {
                   {obj?.title?.slice(0, 60)}
                   {obj?.title?.length > 60 ? "…" : ""}
                 </div>
-                <div style={{ ...s.flex("center", "flex-start", 6), paddingLeft: 17 }}>
-                  <span
+                <div style={{ ...s.flex("center", "space-between"), paddingLeft: 17 }}>
+                  <div style={{ ...s.flex("center", "flex-start", 6) }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        background: T.navyLight,
+                        color: T.navy,
+                        borderRadius: 10,
+                        padding: "2px 10px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {c.progress}%
+                    </span>
+                    <Badge type={c.health}>{c.health}</Badge>
+                    <Badge type="default">{c.type.replace("_", " ")}</Badge>
+                  </div>
+                  <button
+                    onClick={() => handleDelete(c)}
                     style={{
                       fontSize: 11,
-                      background: T.navyLight,
-                      color: T.navy,
-                      borderRadius: 10,
-                      padding: "2px 10px",
-                      fontWeight: 600,
+                      color: T.danger,
+                      background: "none",
+                      border: `1px solid ${T.danger}`,
+                      borderRadius: 5,
+                      padding: "3px 10px",
+                      cursor: "pointer",
+                      fontFamily: "inherit",
                     }}
                   >
-                    {c.progress}%
-                  </span>
-                  <Badge type={c.health}>{c.health}</Badge>
-                  <Badge type="default">{c.type.replace("_", " ")}</Badge>
+                    Delete
+                  </button>
                 </div>
               </div>
             );

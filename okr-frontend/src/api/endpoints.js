@@ -58,6 +58,12 @@ export const ENDPOINTS = {
     remove: (id) => `/check-ins/${id}`,
   },
 
+  // ─── Employees ─────────────────────────────────
+  employees: {
+    list: "/employees",
+    byId: (id) => `/employees/${id}`,
+  },
+
   // ─── Teams ─────────────────────────────────────
   teams: {
     list: "/teams", // supports ?search=

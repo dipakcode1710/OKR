@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal, FormGroup, Input, Select, Btn } from "../common";
 import { s } from "../../utils/theme";
 import { useOkr } from "../../context/OkrContext";
@@ -12,11 +12,28 @@ const INIT = {
   end: "",
 };
 
-export default function CycleModal({ open, onClose }) {
-  const { createCycle } = useOkr();
+export default function CycleModal({ open, onClose, cycle }) {
+  const { createCycle, updateCycle } = useOkr();
   const [form, setForm] = useState(INIT);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState(null);
+
+  useEffect(() => {
+    if (!open) return;
+    if (cycle) {
+      setForm({
+        name: cycle.name || "",
+        code: cycle.code || "",
+        type: cycle.type || "quarterly",
+        active: cycle.active ?? true,
+        start: (cycle.start ?? "").slice(0, 10),
+        end: (cycle.end ?? "").slice(0, 10),
+      });
+    } else {
+      setForm(INIT);
+    }
+    setErr(null);
+  }, [open]);
 
   const set = (k) => (e) =>
     setForm((f) => ({
@@ -28,18 +45,23 @@ export default function CycleModal({ open, onClose }) {
     setSaving(true);
     setErr(null);
     try {
-      await createCycle(form);
-      setForm(INIT);
+      if (cycle) {
+        await updateCycle(cycle.id, form);
+      } else {
+        await createCycle(form);
+      }
       onClose();
     } catch (e) {
-      setErr(e?.message || "Failed to create cycle");
+      setErr(e?.message || (cycle ? "Failed to update cycle" : "Failed to create cycle"));
     } finally {
       setSaving(false);
     }
   };
 
+  const isEdit = Boolean(cycle);
+
   return (
-    <Modal open={open} onClose={onClose} title="New Cycle">
+    <Modal open={open} onClose={onClose} title={isEdit ? "Edit Cycle" : "New Cycle"}>
       <FormGroup label="Cycle Name">
         <Input
           placeholder="e.g. Q2 FY26-27 Engineering"
@@ -101,7 +123,7 @@ export default function CycleModal({ open, onClose }) {
           Cancel
         </Btn>
         <Btn variant="primary" onClick={handleSubmit} disabled={saving}>
-          {saving ? "Creating…" : "Create Cycle"}
+          {saving ? (isEdit ? "Saving…" : "Creating…") : (isEdit ? "Save Changes" : "Create Cycle")}
         </Btn>
       </div>
     </Modal>

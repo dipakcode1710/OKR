@@ -3,7 +3,7 @@ import { useOkr } from "../context/OkrContext";
 import Topbar from "../components/layout/Topbar";
 import { Btn, Badge } from "../components/common";
 
-export default function CyclesScreen({ onNew }) {
+export default function CyclesScreen({ onNew, onEdit }) {
   const { cycles, objectives, lockCycle } = useOkr();
 
   const handleLock = async (id) => {
@@ -59,14 +59,24 @@ export default function CyclesScreen({ onNew }) {
                     {c.locked ? "🔒 Locked" : "🔓 Unlocked"}
                   </span>
                 </div>
-                {!c.locked && (
-                  <Btn
-                    onClick={() => handleLock(c.id)}
-                    style={{ padding: "4px 12px", fontSize: 11 }}
-                  >
-                    Lock cycle
-                  </Btn>
-                )}
+                <div style={{ display: "flex", gap: 8 }}>
+                  {onEdit && !c.locked && (
+                    <Btn
+                      onClick={() => onEdit(c)}
+                      style={{ padding: "4px 12px", fontSize: 11 }}
+                    >
+                      Edit
+                    </Btn>
+                  )}
+                  {!c.locked && (
+                    <Btn
+                      onClick={() => handleLock(c.id)}
+                      style={{ padding: "4px 12px", fontSize: 11 }}
+                    >
+                      Lock cycle
+                    </Btn>
+                  )}
+                </div>
               </div>
             </div>
           ))}
