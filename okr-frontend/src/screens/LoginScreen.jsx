@@ -16,8 +16,8 @@ export default function LoginScreen({ onLogin }) {
     setLoading(true);
     try {
       const data = await login(email, password);
-      localStorage.setItem("okr_auth_token", data.token);
-      localStorage.setItem("okr_user", JSON.stringify({ email: data.email, role: data.role, name: data.name, employeeId: data.employeeId }));
+      sessionStorage.setItem("okr_auth_token", data.token);
+      sessionStorage.setItem("okr_user", JSON.stringify({ email: data.email, role: data.role, name: data.name, employeeId: data.employeeId }));
       onLogin({ email: data.email, role: data.role, name: data.name, employeeId: data.employeeId });
     } catch {
       setError("Invalid email or password.");

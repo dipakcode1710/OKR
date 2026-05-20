@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { T } from "./utils/theme";
 import Sidebar from "./components/layout/Sidebar";
+import { useOkr } from "./context/OkrContext";
 import {
   Dashboard,
   Objectives,
@@ -22,13 +23,16 @@ import {
 
 function getStoredUser() {
   try {
-    return JSON.parse(localStorage.getItem("okr_user"));
+    // Moved to sessionStorage since localStorage persists even after logout which can cause issues if multiple users use the same browser. Session storage is cleared when the tab is closed, providing better security for user data.
+    return JSON.parse(sessionStorage.getItem("okr_user"));
   } catch {
     return null;
   }
 }
 
 export default function App() {
+  // Global state and handlers for modals, navigation, and authentication. This keeps the main App component organized and focused on rendering the appropriate screens and modals based on the current state.
+  const { refresh } = useOkr();
   const [user, setUser] = useState(getStoredUser);
   const [screen, setScreen] = useState("dashboard");
   const [detailId, setDetailId] = useState(null);
@@ -74,11 +78,14 @@ export default function App() {
   function handleLogin(userData) {
     setUser(userData);
     setScreen("dashboard");
+    // Refresh data after login to ensure we have the latest information for the authenticated user. This is important in case there were any changes while the user was logged out.
+    refresh();
   }
 
   function handleLogout() {
-    localStorage.removeItem("okr_auth_token");
-    localStorage.removeItem("okr_user");
+    // Clear session storage on logout to remove any sensitive information and ensure a clean state for the next login. This also prevents issues with stale data if multiple users use the same browser.
+    sessionStorage.removeItem("okr_auth_token");
+    sessionStorage.removeItem("okr_user");
     setUser(null);
     setScreen("dashboard");
   }

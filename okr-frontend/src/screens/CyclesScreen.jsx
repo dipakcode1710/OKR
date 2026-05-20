@@ -4,13 +4,23 @@ import Topbar from "../components/layout/Topbar";
 import { Btn, Badge } from "../components/common";
 
 export default function CyclesScreen({ onNew, onEdit }) {
-  const { cycles, objectives, lockCycle } = useOkr();
+  const { cycles, objectives, lockCycle, deleteCycle } = useOkr();
 
   const handleLock = async (id) => {
     try {
       await lockCycle(id);
     } catch (e) {
       console.error("Lock cycle failed", e);
+    }
+  };
+
+  // Soft delete since cycles can be linked to objectives and we don't want to break data integrity. Deleted cycles can be restored from the database if needed.
+  const handleDelete = async (c) => {
+    if (!window.confirm(`Delete cycle "${c.name}"? This can be restored from the database.`)) return;
+    try {
+      await deleteCycle(c.id);
+    } catch (err) {
+      console.error("Delete cycle failed", err);
     }
   };
 
@@ -76,6 +86,21 @@ export default function CyclesScreen({ onNew, onEdit }) {
                       Lock cycle
                     </Btn>
                   )}
+                  <button
+                    onClick={() => handleDelete(c)}
+                    style={{
+                      fontSize: 11,
+                      color: T.danger,
+                      background: "none",
+                      border: `1px solid ${T.danger}`,
+                      borderRadius: 5,
+                      padding: "3px 10px",
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             </div>

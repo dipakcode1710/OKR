@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/okr";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8082/okr";
 
 const apiClient = axios.create({
   baseURL: `${BASE_URL}/api/v1`,
@@ -14,7 +14,7 @@ const apiClient = axios.create({
 // Request interceptor — attach auth token if present
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("okr_auth_token");
+    const token = sessionStorage.getItem("okr_auth_token");
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
