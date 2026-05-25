@@ -197,7 +197,7 @@ export const toTeamPayload = (form) => ({
 // ─── Auth helpers ────────────────────────────────────────────────
 function getAuthEmployeeId() {
   try {
-    const user = JSON.parse(localStorage.getItem("okr_user") || "{}");
+    const user = JSON.parse(sessionStorage.getItem("okr_user") || "{}");
     return user.employeeId ?? null;
   } catch {
     return null;

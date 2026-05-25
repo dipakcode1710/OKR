@@ -2,7 +2,7 @@ import { T } from "../../utils/theme";
 import Avatar from "../common/Avatar";
 
 function getUser() {
-  try { return JSON.parse(localStorage.getItem("okr_user")); } catch { return null; }
+  try { return JSON.parse(sessionStorage.getItem("okr_user")); } catch { return null; }
 }
 
 export default function Topbar({ title, children }) {
